@@ -13,7 +13,7 @@ API_TIMEOUT = 10
 
 class WsBucketApi:
 
-    def __init__(self, url: str, secret: str = None):
+    def __init__(self, url: str, secret: str):
         self._url = url
         self._secret = secret.encode("utf8")
 
