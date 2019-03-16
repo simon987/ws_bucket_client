@@ -3,6 +3,7 @@ import hmac
 import json
 from email.utils import formatdate
 from typing import BinaryIO
+from urllib.parse import urlparse
 
 import requests
 import websocket
@@ -13,9 +14,10 @@ API_TIMEOUT = 10
 
 class WsBucketApi:
 
-    def __init__(self, url: str, secret: str):
-        self._url = url
+    def __init__(self, url: str, secret: str, ws_scheme: str = "ws"):
+        self._url = urlparse(url)
         self._secret = secret.encode("utf8")
+        self._ws_scheme = ws_scheme
 
     def allocate(self, token: str, max_size: int, file_name: str):
         return self._http_post("/slot", {
@@ -29,7 +31,7 @@ class WsBucketApi:
 
     def upload(self, token: str, stream: BinaryIO, max_size: int):
         ws = websocket.WebSocket()
-        ws.connect("ws://" + self._url + "/upload", header={
+        ws.connect(self._ws_scheme + "://" + self._url.netloc + "/upload", header={
             "X-Upload-Token": token,
         })
 
@@ -50,7 +52,7 @@ class WsBucketApi:
         retries = 0
         while retries < MAX_HTTP_RETRIES:
             try:
-                response = requests.post("http://" + self._url + endpoint, timeout=API_TIMEOUT,
+                response = requests.post(self._url.scheme + "://", self._url.netloc + endpoint, timeout=API_TIMEOUT,
                                          headers=headers, data=body.encode("utf8"))
                 return response
             except Exception as e:
@@ -67,7 +69,7 @@ class WsBucketApi:
         retries = 0
         while retries < MAX_HTTP_RETRIES:
             try:
-                response = requests.get("http://" + self._url + endpoint, timeout=API_TIMEOUT,
+                response = requests.get(self._url.scheme + "://" + self._url.netloc + endpoint, timeout=API_TIMEOUT,
                                         headers=headers)
                 return response
             except Exception as e:
