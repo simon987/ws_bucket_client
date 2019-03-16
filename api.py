@@ -3,6 +3,7 @@ import hmac
 import json
 from email.utils import formatdate
 from typing import BinaryIO
+from urllib.parse import urlparse
 
 import requests
 import websocket
@@ -14,7 +15,7 @@ API_TIMEOUT = 10
 class WsBucketApi:
 
     def __init__(self, url: str, secret: str):
-        self._url = url
+        self._url = urlparse(url)
         self._secret = secret.encode("utf8")
 
     def allocate(self, token: str, max_size: int, file_name: str):
@@ -50,7 +51,7 @@ class WsBucketApi:
         retries = 0
         while retries < MAX_HTTP_RETRIES:
             try:
-                response = requests.post("http://" + self._url + endpoint, timeout=API_TIMEOUT,
+                response = requests.post(self._url.scheme + self._url.host + endpoint, timeout=API_TIMEOUT,
                                          headers=headers, data=body.encode("utf8"))
                 return response
             except Exception as e:
