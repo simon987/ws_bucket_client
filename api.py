@@ -19,11 +19,13 @@ class WsBucketApi:
         self._secret = secret.encode("utf8")
         self._ws_scheme = ws_scheme
 
-    def allocate(self, token: str, max_size: int, file_name: str):
+    def allocate(self, token: str, max_size: int, file_name: str, upload_hook: str, to_dispose_date: int):
         return self._http_post("/slot", {
             "token": token,
             "max_size": max_size,
             "file_name": file_name,
+            "upload_hook": upload_hook,
+            "to_dispose_date": to_dispose_date,
         })
 
     def read(self, token: str):
@@ -31,7 +33,7 @@ class WsBucketApi:
 
     def upload(self, token: str, stream: BinaryIO, max_size: int):
         ws = websocket.WebSocket()
-        ws.connect(self._ws_scheme + "://" + self._url + "/upload", header={
+        ws.connect(self._ws_scheme + "://" + self._url.netloc + "/upload", header={
             "X-Upload-Token": token,
         })
 
